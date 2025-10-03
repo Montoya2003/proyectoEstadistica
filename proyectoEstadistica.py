@@ -61,7 +61,7 @@ class ProyectoEstadistica:
         print("=" * 50)
         print(f"Media: {media:.4f}")
         print(f"Mediana: {mediana:.4f}")
-        print(f"Moda: {moda.mode[0]} (aparece {moda.count[0]} veces)")
+        print(f"Moda: {moda.mode} (aparece {moda.count} veces)")
     
     def medidas_dispersion(self):
         """Calcula medidas de dispersión"""
@@ -216,6 +216,69 @@ class ProyectoEstadistica:
         
         else:
             print("Opción no válida.")
+
+
+    def distribucion_media_muestral(self):
+        """Analiza la distribución de la media muestral"""
+        if self.datos is None:
+            print("No hay datos para analizar.")
+            return
+        
+        valores = self.datos['Valores'] if 'Valores' in self.datos.columns else self.datos.iloc[:, 0]
+        
+        print("\n" + "=" * 50)
+        print("DISTRIBUCIÓN DE LA MEDIA MUESTRAL")
+        print("=" * 50)
+        
+        # Parámetros poblacionales (estimados desde la muestra)
+        media_poblacional = np.mean(valores)
+        desviacion_poblacional = np.std(valores, ddof=1)  # Desviación estándar muestral
+        
+        n = int(input("Tamaño de la muestra (n): "))
+        num_muestras = int(input("Número de muestras a simular: "))
+        
+        # Simular muestreo
+        medias_muestrales = []
+        for _ in range(num_muestras):
+            muestra = np.random.choice(valores, size=n, replace=True)
+            medias_muestrales.append(np.mean(muestra))
+        
+        # Parámetros teóricos de la distribución de la media muestral
+        media_teorica = media_poblacional
+        desviacion_teorica = desviacion_poblacional / math.sqrt(n)
+        
+        # Gráfica
+        plt.figure(figsize=(10, 6))
+        plt.hist(medias_muestrales, bins=30, alpha=0.7, color='skyblue', edgecolor='black', density=True, label='Medias muestrales simuladas')
+        
+        # Curva normal teórica
+        x = np.linspace(min(medias_muestrales), max(medias_muestrales), 100)
+        y = stats.norm.pdf(x, loc=media_teorica, scale=desviacion_teorica)
+        plt.plot(x, y, 'r-', linewidth=2, label='Distribución teórica (normal)')
+        
+        plt.title(f'Distribución de la media muestral (n={n})')
+        plt.xlabel('Media muestral')
+        plt.ylabel('Densidad')
+        plt.legend()
+        plt.grid(alpha=0.75)
+        plt.show()
+        
+        # Resultados numéricos
+        print(f"\nMedia poblacional estimada: {media_poblacional:.4f}")
+        print(f"Desviación estándar poblacional estimada: {desviacion_poblacional:.4f}")
+        print(f"Media teórica de la media muestral: {media_teorica:.4f}")
+        print(f"Desviación estándar teórica de la media muestral (error estándar): {desviacion_teorica:.4f}")
+        
+        # Probabilidad de que la media esté en un intervalo
+        try:
+            a = float(input("\nIngrese el límite inferior del intervalo para la media muestral: "))
+            b = float(input("Ingrese el límite superior del intervalo para la media muestral: "))
+            
+            prob_teorica = stats.norm.cdf(b, loc=media_teorica, scale=desviacion_teorica) - stats.norm.cdf(a, loc=media_teorica, scale=desviacion_teorica)
+            print(f"Probabilidad teórica P({a} ≤ X̄ ≤ {b}) = {prob_teorica:.6f}")
+        except ValueError:
+            print("Error: Ingrese valores numéricos válidos para el intervalo.")
+    
     
     def mostrar_menu(self):
         """Muestra el menú principal y maneja las opciones"""
@@ -226,9 +289,10 @@ class ProyectoEstadistica:
             print("1. Medidas de tendencia central")
             print("2. Medidas de dispersión")
             print("3. Análisis de probabilidad")
-            print("4. Visualización de datos")
-            print("5. Cargar nuevos datos")
-            print("6. Salir")
+            print("4. Distribuciones muestrales")  # Nueva opción
+            print("5. Visualización de datos")
+            print("6. Cargar nuevos datos")
+            print("7. Salir")
             
             opcion = input("Seleccione una opción: ")
             
@@ -238,15 +302,17 @@ class ProyectoEstadistica:
                 self.medidas_dispersion()
             elif opcion == '3':
                 self.analisis_probabilidad()
-            elif opcion == '4':
-                self.visualizacion_datos()
+            elif opcion == '4':  # Nueva opción
+                self.distribucion_media_muestral()
             elif opcion == '5':
-                self.cargar_datos()
+                self.visualizacion_datos()
             elif opcion == '6':
+                self.cargar_datos()
+            elif opcion == '7':
                 print("¡Gracias por usar el Proyecto Python para Análisis Estadístico!")
                 break
             else:
-                print("Opción no válida. Por favor, seleccione una opción del 1 al 6.")
+                print("Opción no válida. Por favor, seleccione una opción del 1 al 7.")
 
 # Ejecutar el proyecto
 if __name__ == "__main__":
